@@ -7,3 +7,4 @@ More info on the USGS Earthquake API available at: https://earthquake.usgs.gov/f
 ## Prerequisites
 
 ## Getting Started
+This sample uses the gradle build system.To build this project, use the "gradlew build" command or use "Import Project" in Android Studio.
