@@ -1,6 +1,8 @@
 package com.example.android.test;
 
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -18,9 +20,10 @@ import com.example.android.test.utils.QueryUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Quakes>> {
     private QuakesAdapter quakesAdapter;
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static final int QUAKE_LOADER_ID = 1;
     private static final String USGS_REQUEST_URL =
             "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&orderby=time&minmag=5&limit=10";
 
@@ -36,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 //            "{\"type\":\"Feature\",\"properties\":{\"mag\":6,\"place\":\"Pacific-Antarctic Ridge\",\"time\":1451986454620,\"updated\":1459202978040,\"tz\":-540,\"url\":\"http://earthquake.usgs.gov/earthquakes/eventpage/us10004bgk\",\"detail\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us10004bgk&format=geojson\",\"felt\":0,\"cdi\":1,\"mmi\":0,\"alert\":\"green\",\"status\":\"reviewed\",\"tsunami\":0,\"sig\":554,\"net\":\"us\",\"code\":\"10004bgk\",\"ids\":\",us10004bgk,gcmt20160105093415,\",\"sources\":\",us,gcmt,\",\"types\":\",cap,dyfi,geoserve,losspager,moment-tensor,nearby-cities,origin,phase-data,shakemap,\",\"nst\":null,\"dmin\":30.75,\"rms\":0.67,\"gap\":71,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 6.0 - Pacific-Antarctic Ridge\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[-136.2603,-54.2906,10]},\"id\":\"us10004bgk\"}],\"bbox\":[-153.4051,-54.2906,10,158.5463,59.6363,582.56]}";
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
         ListView listView = findViewById(R.id.list);
 
-        quakesAdapter = new QuakesAdapter(this,quakesList );
+        quakesAdapter = new QuakesAdapter(this, quakesList);
 
         listView.setAdapter(quakesAdapter);
 
@@ -68,12 +72,43 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        QuakesAsyncTask task = new QuakesAsyncTask();
-        task.execute(USGS_REQUEST_URL);
+//        QuakesAsyncTask task = new QuakesAsyncTask();
+//        task.execute(USGS_REQUEST_URL);
+
+        // Get a reference to he LoaderManager, in order to interact with the loader
+        LoaderManager loaderManager = getLoaderManager();
+
+        // Initialize the loader. Pass in the int ID constant defined above and pass in null for
+        // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
+        // because this activity implements the LoaderCallbacks interface).
+        loaderManager.initLoader(QUAKE_LOADER_ID, null, this);
 
 
+    }
 
 
+    // Load USGS quake results in QuakeLoader
+    @Override
+    public Loader<List<Quakes>> onCreateLoader(int i, Bundle bundle) {
+        return new QuakeLoader(this, USGS_REQUEST_URL);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<Quakes>> loader, List<Quakes> data) {
+        // Clear previously loaded quake data from the adapter
+        quakesAdapter.clear();
+
+        // If data is not null or empty, add it to the adapter
+        if (data != null && !data.isEmpty()) {
+            quakesAdapter.addAll(data);
+        }
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<Quakes>> loader) {
+        // Loader has been reset; clear loaded data
+        quakesAdapter.clear();
 
     }
 
