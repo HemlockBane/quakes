@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Quakes</string>
+    <string name="no_data">No data found</string>
+    <string name="no_internet">Oops! No internet connection</string>
 </resources>

@@ -1,8 +1,11 @@
 package com.example.android.test;
 
 import android.app.LoaderManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.Loader;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +15,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.example.android.test.models.Quakes;
 import com.example.android.test.models.QuakesAdapter;
@@ -22,10 +27,16 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Quakes>> {
     private QuakesAdapter quakesAdapter;
+    private ListView listView;
+    private TextView emptyView;
+    private ProgressBar progressBar;
+
+
+
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final int QUAKE_LOADER_ID = 1;
     private static final String USGS_REQUEST_URL =
-            "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&orderby=time&minmag=5&limit=10";
+            "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&orderby=time&minmag=2&limit=45";
 
 //    private static final String SAMPLE_JSON_RESPONSE = "{\"type\":\"FeatureCollection\",\"metadata\":{\"generated\":1462295443000,\"url\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2016-01-01&endtime=2016-01-31&minmag=6&limit=10\",\"title\":\"USGS Earthquakes\",\"status\":200,\"api\":\"1.5.2\",\"limit\":10,\"offset\":1,\"count\":10},\"features\":[{\"type\":\"Feature\",\"properties\":{\"mag\":7.2,\"place\":\"88km N of Yelizovo, Russia\",\"time\":1454124312220,\"updated\":1460674294040,\"tz\":720,\"url\":\"http://earthquake.usgs.gov/earthquakes/eventpage/us20004vvx\",\"detail\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us20004vvx&format=geojson\",\"felt\":2,\"cdi\":3.4,\"mmi\":5.82,\"alert\":\"green\",\"status\":\"reviewed\",\"tsunami\":1,\"sig\":798,\"net\":\"us\",\"code\":\"20004vvx\",\"ids\":\",at00o1qxho,pt16030050,us20004vvx,gcmt20160130032510,\",\"sources\":\",at,pt,us,gcmt,\",\"types\":\",cap,dyfi,finite-fault,general-link,general-text,geoserve,impact-link,impact-text,losspager,moment-tensor,nearby-cities,origin,phase-data,shakemap,tectonic-summary,\",\"nst\":null,\"dmin\":0.958,\"rms\":1.19,\"gap\":17,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 7.2 - 88km N of Yelizovo, Russia\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[158.5463,53.9776,177]},\"id\":\"us20004vvx\"},\n" +
 //            "{\"type\":\"Feature\",\"properties\":{\"mag\":6.1,\"place\":\"94km SSE of Taron, Papua New Guinea\",\"time\":1453777820750,\"updated\":1460156775040,\"tz\":600,\"url\":\"http://earthquake.usgs.gov/earthquakes/eventpage/us20004uks\",\"detail\":\"http://earthquake.usgs.gov/fdsnws/event/1/query?eventid=us20004uks&format=geojson\",\"felt\":null,\"cdi\":null,\"mmi\":4.1,\"alert\":\"green\",\"status\":\"reviewed\",\"tsunami\":1,\"sig\":572,\"net\":\"us\",\"code\":\"20004uks\",\"ids\":\",us20004uks,gcmt20160126031023,\",\"sources\":\",us,gcmt,\",\"types\":\",cap,geoserve,losspager,moment-tensor,nearby-cities,origin,phase-data,shakemap,tectonic-summary,\",\"nst\":null,\"dmin\":1.537,\"rms\":0.74,\"gap\":25,\"magType\":\"mww\",\"type\":\"earthquake\",\"title\":\"M 6.1 - 94km SSE of Taron, Papua New Guinea\"},\"geometry\":{\"type\":\"Point\",\"coordinates\":[153.2454,-5.2952,26]},\"id\":\"us20004uks\"},\n" +
@@ -47,13 +58,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
 //        List<Quakes> quakesList = QueryUtils.parseJsonResponse(SAMPLE_JSON_RESPONSE);
 
+        progressBar = findViewById(R.id.progress_bar);
+
         List<Quakes> quakesList = new ArrayList<>();
 
-        ListView listView = findViewById(R.id.list);
+        listView = findViewById(R.id.list);
 
         quakesAdapter = new QuakesAdapter(this, quakesList);
 
         listView.setAdapter(quakesAdapter);
+
+        emptyView = findViewById(R.id.empty_text);
+
+        listView.setEmptyView(emptyView);
 
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -75,13 +92,32 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 //        QuakesAsyncTask task = new QuakesAsyncTask();
 //        task.execute(USGS_REQUEST_URL);
 
-        // Get a reference to he LoaderManager, in order to interact with the loader
-        LoaderManager loaderManager = getLoaderManager();
+        // Get a reference to the ConnectivityManager, to check network state
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        // Initialize the loader. Pass in the int ID constant defined above and pass in null for
-        // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
-        // because this activity implements the LoaderCallbacks interface).
-        loaderManager.initLoader(QUAKE_LOADER_ID, null, this);
+        // Check network state
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
+
+        // If device is connected, initiate loaderManger.
+        // Else, display informatory message.
+        if (networkInfo != null && networkInfo.isConnected()){
+
+            // Get a reference to the LoaderManager, in order to interact with the loader
+            LoaderManager loaderManager = getLoaderManager();
+
+            // Initialize the loader. Pass in the int ID constant defined above and pass in null for
+            // the bundle. Pass in this activity for the LoaderCallbacks parameter (which is valid
+            // because this activity implements the LoaderCallbacks interface).
+            loaderManager.initLoader(QUAKE_LOADER_ID, null, this);
+
+        }else {
+            // Hide the progress bar
+            progressBar.setVisibility(View.GONE);
+            // Display informatory message
+            emptyView.setText(R.string.no_internet);
+        }
+
 
 
     }
@@ -95,12 +131,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(Loader<List<Quakes>> loader, List<Quakes> data) {
+
+        // Remove progress bar
+        progressBar.setVisibility(View.GONE);
+
         // Clear previously loaded quake data from the adapter
         quakesAdapter.clear();
 
         // If data is not null or empty, add it to the adapter
+        // Else set empty textView to "No data"
         if (data != null && !data.isEmpty()) {
             quakesAdapter.addAll(data);
+        }else{
+            emptyView.setText(R.string.no_data);
         }
 
     }
@@ -112,37 +155,37 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     }
 
-    private class QuakesAsyncTask extends AsyncTask<String, Void, List<Quakes>> {
-
-        @Override
-        protected List<Quakes> doInBackground(String... params) {
-            Log.e(LOG_TAG, "The doInBackground method works");
-
-
-            // If url array is empty and the first url element in the array is null,
-            // return null
-            if (params.length < 1 || params[0] == null) {
-                return null;
-            }
-
-            List<Quakes> quakesList = QueryUtils.fetchQuakeData(params[0]);
-            Log.i(LOG_TAG, "quakesList: " + quakesList.toString());
-
-            return quakesList;
-        }
-
-        @Override
-        protected void onPostExecute(List<Quakes> data) {
-            Log.e(LOG_TAG, "The onPostExecute method works");
-
-            quakesAdapter.clear();
-
-            // If data is not null or empty, add it to the adapter
-            if (data != null && !data.isEmpty()) {
-                quakesAdapter.addAll(data);
-            }
-
-        }
-
-    }
+//    private class QuakesAsyncTask extends AsyncTask<String, Void, List<Quakes>> {
+//
+//        @Override
+//        protected List<Quakes> doInBackground(String... params) {
+//            Log.e(LOG_TAG, "The doInBackground method works");
+//
+//
+//            // If url array is empty and the first url element in the array is null,
+//            // return null
+//            if (params.length < 1 || params[0] == null) {
+//                return null;
+//            }
+//
+//            List<Quakes> quakesList = QueryUtils.fetchQuakeData(params[0]);
+//            Log.i(LOG_TAG, "quakesList: " + quakesList.toString());
+//
+//            return quakesList;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(List<Quakes> data) {
+//            Log.e(LOG_TAG, "The onPostExecute method works");
+//
+//            quakesAdapter.clear();
+//
+//            // If data is not null or empty, add it to the adapter
+//            if (data != null && !data.isEmpty()) {
+//                quakesAdapter.addAll(data);
+//            }
+//
+//        }
+//
+//    }
 }

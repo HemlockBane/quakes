@@ -36,7 +36,7 @@
             android:text ="74km NW of"
             android:textAllCaps="true"
             android:textColor="@color/textColorEarthquakeDetails"
-            android:textSize="14sp"/>
+            android:textSize="20sp"/>
 
         <TextView
             android:id="@+id/location_primary_view"
