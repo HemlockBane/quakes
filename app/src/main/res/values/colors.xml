@@ -34,4 +34,8 @@
 
     <!-- Magnitude circle color for an earthquake with magnitude over 10 -->
     <color name="magnitude10plus">#C03823</color>
+
+    <color name="textColorEarthquakeDetails">#B4BAC0</color>
+
+    <color name="textColorEarthquakeLocation">#2B3D4D</color>
 </resources>

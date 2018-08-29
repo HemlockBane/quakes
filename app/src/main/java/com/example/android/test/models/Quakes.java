@@ -8,11 +8,14 @@ public class Quakes {
 
     private long time;
 
-    public Quakes(double magnitude, String location, long time){
+    private String url;
+
+    public Quakes(double magnitude, String location, long time, String url){
 
         this.magnitude = magnitude;
         this.location = location;
         this.time = time;
+        this.url = url;
 
     }
 
@@ -38,5 +41,13 @@ public class Quakes {
 
     public void setTime(long time) {
         this.time = time;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 }
