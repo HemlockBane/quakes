@@ -2,9 +2,11 @@
     <string name="app_name">Quakes</string>
     <string name="no_data">No data found</string>
     <string name="no_internet">Oops! No internet connection</string>
+
     <string name="settings_min_magnitude_label">Minimum Magnitude</string>
     <string name="settings_min_magnitude_key" translatable="false">min_magnitude</string>
     <string name="settings_min_magnitude_default" translatable="false">6</string>
+
     <string name="settings_title">Quake Settings</string>
 
 </resources>
